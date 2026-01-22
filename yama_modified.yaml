@@ -161,6 +161,7 @@ variables:
   scene_no_motion: !input scene_no_motion
   motion_entity: !input motion_entity
 
+  dim_target_pct: dim_target_pct
   dim_transition_input: !input dim_transition
   off_transition_input: !input off_transition
   dim_transition_seconds: >
@@ -286,7 +287,7 @@ action:
                       - service: light.turn_on
                         target: !input light_target
                         data:
-                          brightness_pct: "{{ (dim_brightness | float * 0.5) | round(0) }}"
+                          brightness_pct: "{{ (dim_target_pct | float * 0.5) | round(0) }}"
                           transition: "{{ dim_transition_seconds }}"
                       - delay:
                           seconds: "{{ off_transition_seconds }}"
@@ -298,7 +299,7 @@ action:
                   - service: light.turn_on
                     target: !input light_target
                     data:
-                      brightness_pct: !input dim_brightness
+                      brightness_pct: dim_target_pct
                       transition: "{{ dim_transition_seconds }}"
                   - delay:
                       seconds: "{{ off_transition_seconds }}"
