@@ -19,7 +19,7 @@ blueprint:
             domain: light
     dim_brightness:
       name: Target dim brightness (%)
-      default: 50
+      default: 25
       selector:
         number:
           min: 0
@@ -27,18 +27,18 @@ blueprint:
           unit_of_measurement: '%'
     dim_transition:
       name: Time of dim transition (seconds)
-      default: "00:00:30"
+      default: "00:00:10"
       selector:
         time:
     off_transition:
       name: Transition time of turning lights off (seconds)
-      default: "00:00:15"
+      default: "00:00:30"
       selector:
         time:
     no_motion_wait:
       name: Wait time
       description: Time to leave the light on after last motion is detected.
-      default: 120
+      default: 30
       selector:
         number:
           min: 0
@@ -276,7 +276,7 @@ action:
                         data:
                           transition: "{{ off_transition_seconds }}"
 
-                  # EVENING scene: Dim to 25% first
+                  # EVENING scene: Dim to 10% first
                   - conditions:
                       - "{{ scene_evening != 'scene.none' }}"
                       - condition: time
@@ -286,7 +286,7 @@ action:
                       - service: light.turn_on
                         target: !input light_target
                         data:
-                          brightness_pct: 25
+                          brightness_pct: 10
                           transition: "{{ dim_transition_seconds }}"
                       - delay:
                           seconds: "{{ off_transition_seconds }}"
