@@ -276,7 +276,7 @@ action:
                         data:
                           transition: "{{ off_transition_seconds }}"
 
-                  # EVENING scene: Dim to 10% first
+                  # EVENING scene: Dim to 15% first
                   - conditions:
                       - "{{ scene_evening != 'scene.none' }}"
                       - condition: time
@@ -286,14 +286,31 @@ action:
                       - service: light.turn_on
                         target: !input light_target
                         data:
-                          brightness_pct: 10
+                          brightness_pct: 15
                           transition: "{{ dim_transition_seconds }}"
                       - delay:
                           seconds: "{{ off_transition_seconds }}"
                       - service: light.turn_off
                         target: !input light_target
 
-                # STANDARD scene (Day/Morning): Dim to input %
+                  # MORNING scene: Dim to 15% first
+                  - conditions:
+                      - "{{ scene_morning != 'scene.none' }}"
+                      - condition: time
+                        after: !input time_scene_morning
+                        before: !input time_scene_day
+                    sequence:
+                      - service: light.turn_on
+                        target: !input light_target
+                        data:
+                          brightness_pct: 15
+                          transition: "{{ dim_transition_seconds }}"
+                      - delay:
+                          seconds: "{{ off_transition_seconds }}"
+                      - service: light.turn_off
+                        target: !input light_target
+
+                # STANDARD scene (Day): Dim to input %
                 default:
                   - service: light.turn_on
                     target: !input light_target
