@@ -8,7 +8,7 @@ blueprint:
   input:
     motion_entity:
       name: Motion Sensor
-      description: Motion Sensor or a group with Motion Sensors (But can be anything switching between "on" and "off")
+      description: Motion Sensor or a group with Motion Sensors
       selector:
         entity:
     light_target:
@@ -27,12 +27,12 @@ blueprint:
           unit_of_measurement: '%'
     dim_transition:
       name: Time of dim transition (seconds)
-      default: 00:00:30
+      default: "00:00:30"
       selector:
         time:
     off_transition:
       name: Transition time of turning lights off (seconds)
-      default: 00:00:15
+      default: "00:00:15"
       selector:
         time:
     no_motion_wait:
@@ -46,31 +46,31 @@ blueprint:
           unit_of_measurement: seconds
     automation_blocker:
       name: Automation Blocker (Optional)
-      description: Only run if this boolean is in desired state (see next input)
+      description: Only run if this boolean is in desired state
       default:
       selector:
         entity:
     automation_blocker_boolean:
       name: Automation Blocker Chooser (Optional)
-      description: Desired state of automation blocker, choose on for on and off for off
+      description: Choose 'on' for True and 'off' for False
       default: false
       selector:
         boolean:
     no_motion_blocker:
       name: No Motion Blocker (Optional)
-      description: No motion sequence is not run if this boolean is in desired state (see next input)
+      description: No motion sequence is not run if this boolean is in desired state
       default:
       selector:
         entity:
     no_motion_blocker_boolean:
       name: No Motion Chooser (Optional)
-      description: Desired state of no motion blocker, choose on for on and off for off
+      description: Choose 'on' for True and 'off' for False
       default: false
       selector:
         boolean:
     elevation_check:
       name: Sun elevation check (Optional)
-      description: This is the angle between the sun and the horizon. Negative values mean the sun is BELOW the horizon.
+      description: Angle between the sun and the horizon.
       default: none
       selector:
         number:
@@ -79,20 +79,17 @@ blueprint:
           unit_of_measurement: degrees
     scene_ambient:
       name: Ambient Scene (Optional)
-      description: Scene for ambient state. Will be activated when no motion is detected.
       default: scene.none
       selector:
         entity:
           domain: scene
     time_scene_ambient_start:
       name: Ambient time frame start (Optional)
-      description: Time from which on ambient scene will be activated
       default: "00:00:00"
       selector:
         time:
     time_scene_ambient_end:
       name: Ambient time frame end (Optional)
-      description: Time from which on ambient scene will be not activated
       default: "00:00:00"
       selector:
         time:
@@ -104,7 +101,6 @@ blueprint:
           domain: scene
     time_scene_morning:
       name: Time for the morning scene (Optional)
-      description: A time input which defines the time from which on the scene will be activated if motion is detected.
       default: "00:00:00"
       selector:
         time:
@@ -116,7 +112,6 @@ blueprint:
           domain: scene
     time_scene_day:
       name: Time for the day scene (Optional)
-      description: A time input which defines the time from which on the scene will be activated if motion is detected.
       default: "00:00:00"
       selector:
         time:
@@ -128,7 +123,6 @@ blueprint:
           domain: scene
     time_scene_evening:
       name: Time for the evening scene (Optional)
-      description: A time input which defines the time from which on the scene will be activated if motion is detected.
       default: "00:00:00"
       selector:
         time:
@@ -140,13 +134,11 @@ blueprint:
           domain: scene
     time_scene_night:
       name: Time for the night scene (Optional)
-      description: A time input which defines the time from which on the scene will be activated if motion is detectedd.
       default: "00:00:00"
       selector:
         time:
     scene_no_motion:
       name: Default scene for no motion (Optional)
-      description: Set this Scene if you want to activate a scene if motion stops
       default: scene.none
       selector:
         entity:
@@ -162,7 +154,7 @@ variables:
   scene_evening: !input scene_evening
   scene_night: !input scene_night
   automation_blocker: !input automation_blocker
-  automation_blocker_boolean : !input automation_blocker_boolean
+  automation_blocker_boolean: !input automation_blocker_boolean
   no_motion_blocker: !input no_motion_blocker
   no_motion_blocker_boolean: !input no_motion_blocker_boolean
   elevation_check: !input elevation_check
@@ -190,13 +182,13 @@ trigger:
     for: !input no_motion_wait
 
 condition:
-  # Check if automation blocker exist or is in desired state, otherwise do not run
+  # Check if automation blocker exists or is in desired state
   - condition: or
     conditions:
       - "{{ automation_blocker == none }}"
       - "{{ automation_blocker_boolean and states(automation_blocker) == 'on' }}"
       - "{{ not automation_blocker_boolean and states(automation_blocker) == 'off' }}"
-  # Check if elevation input exist or is below desired value, otherwise do not run
+  # Check sun elevation
   - condition: template
     value_template: "{{ (elevation_check == none) or (state_attr('sun.sun','elevation') <= elevation_check | float(90)) }}"
 
@@ -240,15 +232,15 @@ action:
                     before: !input time_scene_morning
                 sequence:
                   - scene: !input scene_night
-            # If State -> "On" defaulting to turn light on
+            # Default: Turn light on
             default:
               - service: light.turn_on
                 target: !input light_target
-      # Trigger to state = "off"
+      # Trigger to state == "off"
       - conditions:
           - condition: template
             value_template: "{{ trigger.to_state.state == 'off' }}"
-          # Check if no motion blocker exist or in in desired state, otherwise do not run any no motion action
+          # Check no motion blocker
           - condition: or
             conditions:
               - "{{ no_motion_blocker == none }}"
@@ -256,7 +248,7 @@ action:
               - "{{ not no_motion_blocker_boolean and states(no_motion_blocker) == 'off' }}"
         sequence:
           - choose:
-              # Used if ambient scene is true and in ambient scene time frame
+              # Ambient scene
               - conditions:
                   - "{{ scene_ambient != 'scene.none' }}"
                   - condition: time
@@ -264,12 +256,12 @@ action:
                     before: !input time_scene_ambient_end
                 sequence:
                   - scene: !input scene_ambient
-              # Used if default no motion scene is set
+              # Default no motion scene
               - conditions:
                   - "{{ scene_no_motion != 'scene.none' }}"
                 sequence:
                   - scene: !input scene_no_motion
-            # If State -> "off" default to turn lights off
+            # Default: Dim then turn off
             default:
               - service: light.turn_on
                 target: !input light_target
