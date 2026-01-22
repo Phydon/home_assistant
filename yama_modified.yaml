@@ -17,26 +17,24 @@ blueprint:
         target:
           entity:
             domain: light
-
     dim_brightness:
-      name: Zielhelligkeit beim Dimmen (%)
-      default: 20
+      name: target dim brightness (%)
+      default: 50
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: '%'
     dim_transition:
-      name: Dauer des Dimm-Übergangs (Sekunden)
+      name: time of dim transition (seconds)
       default: 00:00:30
       selector:
         time:
     off_transition:
-      name: Dauer des Ausschalt-Übergangs (Sekunden)
+      name: transistion time of turning lights off (seconds)
       default: 00:00:15
       selector:
         time:
-
     no_motion_wait:
       name: Wait time
       description: Time to leave the light on after last motion is detected.
