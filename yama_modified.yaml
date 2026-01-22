@@ -161,8 +161,6 @@ variables:
   scene_no_motion: !input scene_no_motion
   motion_entity: !input motion_entity
 
-  dim_target_pct: !input dim_brightness
-  evening_dim_pct: "{{ (!input dim_brightness | float(50) * 0.5) | round(0) }}"
   dim_transition_input: !input dim_transition
   off_transition_input: !input off_transition
   dim_transition_seconds: >
@@ -288,7 +286,7 @@ action:
                       - service: light.turn_on
                         target: !input light_target
                         data:
-                          brightness_pct: "{{ evening_dim_pct }}"
+                          brightness_pct: 25
                           transition: "{{ dim_transition_seconds }}"
                       - delay:
                           seconds: "{{ off_transition_seconds }}"
