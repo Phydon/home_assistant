@@ -2,8 +2,6 @@ blueprint:
   name: YAMA Modified
   description: >
     # YAMA Modified
-    # original:
-    # https://gist.github.com/networkingcat/a1876d7e706e07c8bdcf974113940fb8
   domain: automation
   input:
     motion_entity:
@@ -19,6 +17,7 @@ blueprint:
             domain: light
     dim_brightness:
       name: Target dim brightness (%)
+      description: Default brightness for dimming phase (Morning/Day)
       default: 50
       selector:
         number:
@@ -182,25 +181,23 @@ trigger:
     for: !input no_motion_wait
 
 condition:
-  # Check if automation blocker exists or is in desired state
   - condition: or
     conditions:
       - "{{ automation_blocker == none }}"
       - "{{ automation_blocker_boolean and states(automation_blocker) == 'on' }}"
       - "{{ not automation_blocker_boolean and states(automation_blocker) == 'off' }}"
-  # Check sun elevation
   - condition: template
     value_template: "{{ (elevation_check == none) or (state_attr('sun.sun','elevation') <= elevation_check | float(90)) }}"
 
 action:
   - choose:
-      # Trigger to state == "on"
+      # --- TRIGGER: MOTION DETECTED (ON) ---
       - conditions:
           - condition: template
             value_template: "{{ trigger.to_state.state == 'on' }}"
         sequence:
           - choose:
-              # Morning Scene
+              # Morning
               - conditions:
                   - "{{ scene_morning != 'scene.none'}}"
                   - condition: time
@@ -208,7 +205,7 @@ action:
                     before: !input time_scene_day
                 sequence:
                   - scene: !input scene_morning
-              # Day Scene
+              # Day
               - conditions:
                   - "{{ scene_day != 'scene.none'}}"
                   - condition: time
@@ -216,7 +213,7 @@ action:
                     before: !input time_scene_evening
                 sequence:
                   - scene: !input scene_day
-              # Evening Scene
+              # Evening
               - conditions:
                   - "{{ scene_evening != 'scene.none'}}"
                   - condition: time
@@ -224,7 +221,7 @@ action:
                     before: !input time_scene_night
                 sequence:
                   - scene: !input scene_evening
-              # Night Scene
+              # Night
               - conditions:
                   - "{{ scene_night != 'scene.none'}}"
                   - condition: time
@@ -232,15 +229,15 @@ action:
                     before: !input time_scene_morning
                 sequence:
                   - scene: !input scene_night
-            # Default: Turn light on
+            # Default On
             default:
               - service: light.turn_on
                 target: !input light_target
-      # Trigger to state == "off"
+
+      # --- TRIGGER: NO MOTION (OFF) ---
       - conditions:
           - condition: template
             value_template: "{{ trigger.to_state.state == 'off' }}"
-          # Check no motion blocker
           - condition: or
             conditions:
               - "{{ no_motion_blocker == none }}"
@@ -248,7 +245,7 @@ action:
               - "{{ not no_motion_blocker_boolean and states(no_motion_blocker) == 'off' }}"
         sequence:
           - choose:
-              # Ambient scene
+              # Ambient Scene check
               - conditions:
                   - "{{ scene_ambient != 'scene.none' }}"
                   - condition: time
@@ -256,12 +253,12 @@ action:
                     before: !input time_scene_ambient_end
                 sequence:
                   - scene: !input scene_ambient
-              # Default no motion scene
+              # No Motion Scene check
               - conditions:
                   - "{{ scene_no_motion != 'scene.none' }}"
                 sequence:
                   - scene: !input scene_no_motion
-            # Default: Dim then turn off
+            # Default "Turn Off" Sequence with Smart Dimming
             default:
               - choose:
                   # NIGHT scene: Turn off immediately (no dimming)
