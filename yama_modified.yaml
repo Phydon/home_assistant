@@ -263,12 +263,44 @@ action:
                   - scene: !input scene_no_motion
             # Default: Dim then turn off
             default:
-              - service: light.turn_on
-                target: !input light_target
-                data:
-                  brightness_pct: !input dim_brightness
-                  transition: "{{ dim_transition_seconds }}"
-              - delay:
-                  seconds: "{{ off_transition_seconds }}"
-              - service: light.turn_off
-                target: !input light_target
+              - choose:
+                  # NIGHT scene: Turn off immediately (no dimming)
+                  - conditions:
+                      - "{{ scene_night != 'scene.none' }}"
+                      - condition: time
+                        after: !input time_scene_night
+                        before: !input time_scene_morning
+                    sequence:
+                      - service: light.turn_off
+                        target: !input light_target
+                        data:
+                          transition: "{{ off_transition_seconds }}"
+
+                  # EVENING scene: Dim to 25% first
+                  - conditions:
+                      - "{{ scene_evening != 'scene.none' }}"
+                      - condition: time
+                        after: !input time_scene_evening
+                        before: !input time_scene_night
+                    sequence:
+                      - service: light.turn_on
+                        target: !input light_target
+                        data:
+                          brightness_pct: "{{ (dim_brightness | float * 0.5) | round(0) }}"
+                          transition: "{{ dim_transition_seconds }}"
+                      - delay:
+                          seconds: "{{ off_transition_seconds }}"
+                      - service: light.turn_off
+                        target: !input light_target
+
+                # STANDARD scene (Day/Morning): Dim to input %
+                default:
+                  - service: light.turn_on
+                    target: !input light_target
+                    data:
+                      brightness_pct: !input dim_brightness
+                      transition: "{{ dim_transition_seconds }}"
+                  - delay:
+                      seconds: "{{ off_transition_seconds }}"
+                  - service: light.turn_off
+                    target: !input light_target
