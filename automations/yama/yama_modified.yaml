@@ -1,7 +1,7 @@
 blueprint:
-  name: YAMA Modified
+  name: YAMA Added Scenes
   description: >
-    # YAMA Modified
+    # YAMA Added Scenes
     # original:
     # https://gist.github.com/networkingcat/a1876d7e706e07c8bdcf974113940fb8
   domain: automation
@@ -93,6 +93,17 @@ blueprint:
       default: "00:00:00"
       selector:
         time:
+    scene_early_morning:
+      name: Scene for the early morning (Optional)
+      default: scene.none
+      selector:
+        entity:
+          domain: scene
+    time_scene_early_morning:
+      name: Time for the early morning scene (Optional)
+      default: "00:00:00"
+      selector:
+        time:
     scene_morning:
       name: Scene for the morning (Optional)
       default: scene.none
@@ -112,6 +123,17 @@ blueprint:
           domain: scene
     time_scene_day:
       name: Time for the day scene (Optional)
+      default: "00:00:00"
+      selector:
+        time:
+    scene_early_evening:
+      name: Scene for the early evening (Optional)
+      default: scene.none
+      selector:
+        entity:
+          domain: scene
+    time_scene_early_evening:
+      name: Time for the early evening scene (Optional)
       default: "00:00:00"
       selector:
         time:
@@ -149,8 +171,10 @@ max_exceeded: silent
 
 variables:
   scene_ambient: !input scene_ambient
+  scene_early_morning: !input scene_early_morning
   scene_morning: !input scene_morning
   scene_day: !input scene_day
+  scene_early_evening: !input scene_early_evening
   scene_evening: !input scene_evening
   scene_night: !input scene_night
   automation_blocker: !input automation_blocker
@@ -200,6 +224,14 @@ action:
             value_template: "{{ trigger.to_state.state == 'on' }}"
         sequence:
           - choose:
+              # Early Morning Scene
+              - conditions:
+                  - "{{ scene_early_morning != 'scene.none'}}"
+                  - condition: time
+                    after: !input time_scene_early_morning
+                    before: !input time_scene_morning
+                sequence:
+                  - scene: !input scene_early_morning
               # Morning Scene
               - conditions:
                   - "{{ scene_morning != 'scene.none'}}"
@@ -216,6 +248,14 @@ action:
                     before: !input time_scene_evening
                 sequence:
                   - scene: !input scene_day
+              # Early Evening Scene
+              - conditions:
+                  - "{{ scene_early_evening != 'scene.none'}}"
+                  - condition: time
+                    after: !input time_scene_early_evening
+                    before: !input time_scene_evening
+                sequence:
+                  - scene: !input scene_early_evening
               # Evening Scene
               - conditions:
                   - "{{ scene_evening != 'scene.none'}}"
@@ -276,7 +316,7 @@ action:
                         data:
                           transition: "{{ off_transition_seconds }}"
 
-                  # EVENING scene: Dim to 15% first
+                  # EVENING scene: Dim to 10% first
                   - conditions:
                       - "{{ scene_evening != 'scene.none' }}"
                       - condition: time
@@ -286,7 +326,41 @@ action:
                       - service: light.turn_on
                         target: !input light_target
                         data:
+                          brightness_pct: 10
+                          transition: "{{ dim_transition_seconds }}"
+                      - delay:
+                          seconds: "{{ off_transition_seconds }}"
+                      - service: light.turn_off
+                        target: !input light_target
+
+                  # Early EVENING scene: Dim to 15% first
+                  - conditions:
+                      - "{{ scene_early_evening != 'scene.none' }}"
+                      - condition: time
+                        after: !input time_scene_early:evening
+                        before: !input time_scene_evening
+                    sequence:
+                      - service: light.turn_on
+                        target: !input light_target
+                        data:
                           brightness_pct: 15
+                          transition: "{{ dim_transition_seconds }}"
+                      - delay:
+                          seconds: "{{ off_transition_seconds }}"
+                      - service: light.turn_off
+                        target: !input light_target
+
+                  # Early MORNING scene: Dim to 7% first
+                  - conditions:
+                      - "{{ scene_early_morning != 'scene.none' }}"
+                      - condition: time
+                        after: !input time_scene_early_morning
+                        before: !input time_scene_morning
+                    sequence:
+                      - service: light.turn_on
+                        target: !input light_target
+                        data:
+                          brightness_pct: 7
                           transition: "{{ dim_transition_seconds }}"
                       - delay:
                           seconds: "{{ off_transition_seconds }}"
