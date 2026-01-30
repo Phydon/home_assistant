@@ -1,0 +1,18 @@
+alias: "Danfoss Ally: Externe Temperatur übertragen"
+description: Überträgt alle 5 Minuten die Temperatur an das Danfoss Ally
+triggers:
+  - trigger: time_pattern
+    minutes: /5
+actions:
+  - action: zha.set_zigbee_cluster_attribute
+    data:
+      ieee: 28:DB:A7:FF:FE:F6:DC:C4
+      endpoint_id: 1
+      cluster_id: 513
+      cluster_type: in
+      attribute: 16405
+      value: >-
+        {{ (states('sensor.temperatur_schlafzimmer') | float(20) * 100) |
+        round(0) | int }}
+mode: single
+
