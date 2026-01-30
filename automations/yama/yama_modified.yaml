@@ -245,7 +245,7 @@ action:
                   - "{{ scene_day != 'scene.none'}}"
                   - condition: time
                     after: !input time_scene_day
-                    before: !input time_scene_evening
+                    before: !input time_scene_early_evening
                 sequence:
                   - scene: !input scene_day
               # Early Evening Scene
@@ -269,7 +269,7 @@ action:
                   - "{{ scene_night != 'scene.none'}}"
                   - condition: time
                     after: !input time_scene_night
-                    before: !input time_scene_morning
+                    before: !input time_scene_early_morning
                 sequence:
                   - scene: !input scene_night
             # Default: Turn light on
@@ -309,7 +309,7 @@ action:
                       - "{{ scene_night != 'scene.none' }}"
                       - condition: time
                         after: !input time_scene_night
-                        before: !input time_scene_morning
+                        before: !input time_scene_early_morning
                     sequence:
                       - service: light.turn_off
                         target: !input light_target
@@ -337,7 +337,7 @@ action:
                   - conditions:
                       - "{{ scene_early_evening != 'scene.none' }}"
                       - condition: time
-                        after: !input time_scene_early:evening
+                        after: !input time_scene_early_evening
                         before: !input time_scene_evening
                     sequence:
                       - service: light.turn_on
